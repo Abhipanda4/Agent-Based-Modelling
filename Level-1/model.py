@@ -19,8 +19,12 @@ class World(Model):
                 # create a new explorer
                 a = Explorer(i, self)
             else:
+                # create a new exploiter
                 a = Exploiter(i, self)
+
+            # add agent to scheduler
             self.schedule.add(a)
+
             x = np.random.randint(0, self.grid.width)
             y = np.random.randint(0, self.grid.height)
             self.grid.place_agent(a, (x, y))
