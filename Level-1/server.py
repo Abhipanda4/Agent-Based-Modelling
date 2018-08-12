@@ -20,7 +20,14 @@ def agent_portrayal(agent):
                 "r": 0.5,
                 }
     else:
-        raise Exception("Agent has to be either exploiting or exploratory!!")
+        return {
+                "Shape": "rect",
+                "Filled": "true",
+                "Layer": 0,
+                "Color": "blue",
+                "w": 1,
+                "h": 1,
+                }
 
 grid = CanvasGrid(agent_portrayal, 100, 100, 800, 800)
 server = ModularServer(World, [grid], "Demo", {"N": 100})
