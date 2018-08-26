@@ -7,15 +7,15 @@ def agent_portrayal(agent):
         return {
                 "Shape": "circle",
                 "Filled": "true",
-                "Layer": 0,
-                "Color": "blue",
-                "r": 0.5,
+                "Layer": 0.2,
+                "Color": "green",
+                "r": 0.8,
                 }
     elif agent.type == "exploiter":
         return {
                 "Shape": "circle",
                 "Filled": "true",
-                "Layer": 0,
+                "Layer": 0.2,
                 "Color": "red",
                 "r": 0.5,
                 }

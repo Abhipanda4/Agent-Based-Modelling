@@ -10,12 +10,13 @@ from agent import *
 class World(Model):
     def __init__(self, N, width=100, height=100):
         self.num_agents = N
-        self.grid = MultiGrid(width, height, True)
+        self.grid = MultiGrid(width, height, False)
         self.schedule = RandomActivation(self)
         self.running = True
         self.population_center_x = np.random.randint(POP_MARGIN, self.grid.width - POP_MARGIN)
         self.population_center_y = np.random.randint(POP_MARGIN, self.grid.height - POP_MARGIN)
         self.num_energy_resources = RESERVE_SIZE
+        self.dead_people = 0
 
         # add social agents to the world
         for i in range(self.num_agents):
@@ -44,7 +45,6 @@ class World(Model):
             self.grid.place_agent(a, (x, y))
 
             self.schedule.add(a)
-
 
     def step(self):
         self.schedule.step()
