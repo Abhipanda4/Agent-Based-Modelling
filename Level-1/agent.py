@@ -19,12 +19,19 @@ def get_target_cell(target, curr):
     y_new = get_next_step(y_t, y_curr)
     return (x_new, y_new)
 
+def is_member(coord, list_of_tuples):
+    coord_list = [i[0] for i in list_of_tuples]
+    try:
+        idx = coord_list.index(coord)
+        return idx
+    except ValueError:
+        return None
 
 class EnergyResource(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
         self.reserve = max(0, np.random.normal(MEAN_RESERVE, STDDEV_RESERVE))
-        self.decay_rate = np.random.uniform(-DECAY_RATE, DECAY_RATE)
+        self.decay_rate = np.random.uniform(0, DECAY_RATE)
         self.type = "energy_reserve"
 
     def step(self):
@@ -32,8 +39,10 @@ class EnergyResource(Agent):
         if self.reserve <= 0:
             # remove this energy reserve from all agent's memories
             for a in self.model.schedule.agents:
-                if isinstance(a, SocietyMember) and self.pos in a.memory:
-                    a.memory.remove(self.pos)
+                if isinstance(a, SocietyMember):
+                    idx = is_member(self.pos, a.memory)
+                    if idx is not None:
+                        a.memory.pop(idx)
 
             # remove enrgy from scheduler and world
             self.model.schedule.remove(self)
@@ -48,9 +57,17 @@ class SocietyMember(Agent):
         self.target = None
 
     def update_target(self):
+        def criteria(x):
+            # define a selection criteria for target
+            # it is based on amount of energy expected at the destination
+            dest, reserve_size, decay = x[0], x[1], x[2]
+            d = max(dest[0] - self.pos[0], dest[1] - self.pos[1])
+            expected_energy = reserve_size - d * decay
+            return expected_energy
+
         if self.target is None:
             if len(self.memory) > 0:
-                self.target = min(self.memory, key=lambda x: max(x[0] - self.pos[0], x[1] - self.pos[1]))
+                self.target = max(self.memory, key=criteria)[0]
 
     def update_memory(self, max_range):
         '''
@@ -59,10 +76,9 @@ class SocietyMember(Agent):
         '''
         nbrs = self.model.grid.get_neighbors(self.pos, moore=True, radius=max_range)
         for e in nbrs:
-            if isinstance(e, EnergyResource) and e.pos not in self.memory:
-                self.memory.append(e.pos)
-                if len(self.memory) == 1:
-                    self.target = e.pos
+            idx = is_member(e.pos, self.memory)
+            if isinstance(e, EnergyResource) and idx is None:
+                self.memory.append((e.pos, e.reserve, e.decay_rate))
 
     def mine_energy(self):
         cell_occupiers = self.model.grid.get_cell_list_contents(self.pos)
@@ -73,22 +89,24 @@ class SocietyMember(Agent):
             # the reserve has decayed before agent reached here
             self.target = None
             self.update_target()
-            return
+            return False
 
         if src.reserve <= 0:
             self.target = None
             self.update_target()
-            return
+            return False
 
         # mining increases agent's energy and reduces energy of reserve
         self.energy += self.mining_rate
         src.reserve -= self.mining_rate
+        return True
 
     def share_memory(self, agent):
-        cooperation = 0.5
         for m in self.memory:
-            if np.random.uniform() < cooperation and m not in agent.memory:
-                agent.memory.append(m)
+            if np.random.uniform() < SHARE_PROB:
+                idx = is_member(m[0], agent.memory)
+                if idx is None:
+                    agent.memory.append(m)
 
     def communicate(self, max_range):
         ''' Communication between 2 agents '''
@@ -102,12 +120,40 @@ class SocietyMember(Agent):
         ''' Removes the agent from gridworld and scheduler '''
         self.model.schedule.remove(self)
         self.model.grid.remove_agent(self)
-        print("Agent %s is dying at an age of %d" %(self.unique_id, self.age))
-        self.model.dead_people += 1
 
-    def move(self):
-        ''' Move to a neighboring cell in grid '''
-        raise NotImplementedError
+    def reproduce(self):
+        ''' An agent reproduces to produca a new agent. The new agent is of
+        same type as parent with high prob, but may also be different '''
+        self.energy -= REPRODUCTION_ENERGY
+        a = None
+        self.model.num_agents += 1
+        if "explorer" in self.unique_id:
+            if np.random.uniform() < INHERITANCE_PROB:
+                self.model.num_explorers += 1
+                a = Explorer("explorer_%d" %(self.model.num_agents), self.model)
+            else:
+                self.model.num_exploiters += 1
+                a = Exploiter("exploiter_%d" %(self.model.num_agents), self.model)
+
+        elif "exploiter" in self.unique_id:
+            if np.random.uniform() < INHERITANCE_PROB:
+                self.model.num_exploiters += 1
+                a = Exploiter("exploiter_%d" %(self.model.num_agents), self.model)
+            else:
+                self.model.num_explorers += 1
+                a = Explorer("explorer_%d" %(self.model.num_agents), self.model)
+
+        else:
+            raise Exception("Alien has been found!!")
+
+        # place the new agent in vicinity of the parent
+        nbrs = self.model.grid.get_neighborhood(self.pos, moore=True, radius=3)
+        pos = random.choice(nbrs)
+        self.model.grid.place_agent(a, pos)
+
+        # add the new agent to scheduler
+        self.model.schedule.add(a)
+        self.model.expected_ages.append(a.energy / a.living_cost)
 
     def step(self):
         raise NotImplementedError
@@ -116,15 +162,18 @@ class Explorer(SocietyMember):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
         self.type = "explorer"
-        self.stamina = np.random.normal(EXPLORER_MEAN_STAMINA, EXPLORER_STD_STAMINA)
+        self.living_cost = max(0.25, np.random.normal(EXPLORER_COST_MEAN, EXPLORER_COST_STD))
         self.communication_range = EXPLORER_COMM_RANGE
         self.sense_range = EXPLORER_SENSE_RANGE
         self.mining_rate = EXPLORER_MINING_RATE
         self.drift = random.choice(DIRECTIONS)
         self.nbr_prob_dist = self.get_nbr_prob_dist()
         self.mine_mode = False
+        self.change_direction_buffer_time = 0
 
     def get_nbr_prob_dist(self):
+        ''' Gives a probability distribution of selecting neighbor cells
+        so that overall a drift is achieved in one direction '''
         dist = [0.25 / 5] * 8
         if self.drift == 0:
             idx = [5, 6, 7]
@@ -142,31 +191,38 @@ class Explorer(SocietyMember):
     def get_next_cell(self):
         nbrs = self.model.grid.get_neighborhood(self.pos, moore=True, radius=1)
         if len(nbrs) != 8:
+            # agent is at boundary
             cell = random.choice(nbrs)
+            if self.change_direction_buffer_time % 10 == 0:
+                self.drift = (self.drift + 1) % 4
+            self.change_direction_buffer_time += 1
         else:
+            # drift in one direction by choosing that direction with higher probability
             nbr_idx = list(range(8))
             cell_idx = np.random.choice(nbr_idx, p=self.nbr_prob_dist)
             cell = nbrs[cell_idx]
         return cell
 
-    def get_target(self):
-        return self.pos
-
     def step(self):
-        # add new energy resources into memory
+        # sense and add new energy resources into memory
         if self.model.schedule.time % SENSE_STEPS == 0:
-            self.update_memory(max_range=EXPLORER_SENSE_RANGE)
+            self.update_memory(max_range=self.sense_range)
 
         # share memory with other agents
         if self.model.schedule.time % COMMUNICATION_STEPS == 0:
-            self.communicate(max_range=EXPLORER_COMM_RANGE)
+            self.communicate(max_range=self.communication_range)
 
+        # already reached an energy source
         if self.target is not None and self.target == self.pos:
-            # already reached an energy source
-            if self.energy <= 2 * THRESHOLD_EXPLORER:
+            assert self.mine_mode is True
+            if self.energy <= MINING_FACTOR * THRESHOLD_EXPLORER:
                 # mine energy from this location if energy is low
-                self.mine_energy()
+                success = self.mine_energy()
+                if not success:
+                    # energy has depleted from this src
+                    self.update_target()
             else:
+                # sufficient energy has been replenished, continue exploration
                 self.mine_mode = False
                 self.target = None
             self.age += 1
@@ -187,47 +243,109 @@ class Explorer(SocietyMember):
                 new_position = self.get_next_cell()
 
         self.model.grid.move_agent(self, new_position)
-        self.energy -= self.stamina
+        self.energy -= self.living_cost
 
         if not self.mine_mode and self.energy < THRESHOLD_EXPLORER:
+            # when enrgy is low, switch to mining mode
             self.mine_mode = True
+
+        if self.model.schedule.time % REPRODUCTION_STEPS == 0:
+            if self.energy >= 2 * REPRODUCTION_ENERGY and np.random.uniform() < REPRODUCE_PROB:
+                self.reproduce()
 
         self.age += 1
         if self.energy <= 0:
+            self.model.ages.append((self.unique_id, self.age))
             self.die()
 
 class Exploiter(SocietyMember):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
         self.type = "exploiter"
-        self.stamina = np.random.normal(EXPLOITER_MEAN_STAMINA, EXPLOITER_STD_STAMINA)
+        self.living_cost = max(0.5, np.random.normal(EXPLOITER_COST_MEAN, EXPLOITER_COST_STD))
+        self.static_living_cost = max(0.2, self.living_cost / 4)
         self.communication_range = EXPLOITER_COMM_RANGE
         self.sense_range = EXPLOITER_SENSE_RANGE
         self.mining_rate = EXPLOITER_MINING_RATE
+        self.is_at_base = False
+        self.is_exploiting = False
 
     def move(self):
         if self.target is None:
             self.update_target()
 
+        # target is not updated since no resources in memory
+        if self.target is None:
+            self.target = random.choice(self.model.bases)
+            self.is_exploiting = False
+
         if self.target == self.pos:
-            self.mine_energy()
+            if self.is_at_base:
+                self.is_exploiting = False
 
-        if self.target is not None:
-            new_position = get_target_cell(self.target, self.pos)
+            elif self.energy <= MINING_FACTOR * THRESHOLD_EXPLOITER:
+                success = self.mine_energy()
+                if not success:
+                    # source has depleted before full energy was replenished
+                    self.update_target()
+                    if self.target is None:
+                        self.target = random.choice(self.model.bases)
+                        self.is_at_base = True
 
-        self.model.grid.move_agent(self, new_position)
-        self.energy -= self.stamina
+            else:
+                # remove current pos from memory and get a new target
+                tmp = None
+                idx = is_member(self.pos, self.memory)
+                if idx:
+                    tmp = self.memory[idx]
+                    del self.memory[idx]
+
+                self.target = random.choice(self.model.bases)
+                self.is_at_base = True
+
+                # add current pos back in memory to mine at later times
+                if idx:
+                    self.memory.append(tmp)
+
+        else:
+            new_position = None
+            if self.target is not None:
+                new_position = get_target_cell(self.target, self.pos)
+
+            if new_position is not None:
+                self.model.grid.move_agent(self, new_position)
+                self.energy -= self.living_cost
 
     def step(self):
         self.age += 1
-        if len(self.memory) > 0:
+        # sense and add new energy resources into memory
+        if self.model.schedule.time % SENSE_STEPS == 0:
+            self.update_memory(max_range=self.sense_range)
+
+        if not self.is_exploiting and self.energy < THRESHOLD_EXPLOITER:
+            if len(self.memory) > 0:
+                self.is_exploiting = True
+
+        if self.is_exploiting:
+            # once agent acquires knowledge of energy resources
+            # move towards it
             self.move()
-        elif np.random.uniform() < 0.2:
+
+        elif np.random.uniform() < EXPLOITER_MOVE_PROB:
+            # move randomly with small probability
             nbrs = self.model.grid.get_neighborhood(self.pos, moore=True, radius=1)
             new_position = random.choice(nbrs)
             self.model.grid.move_agent(self, new_position)
-            self.energy -= self.stamina
+            self.energy -= self.living_cost
 
+        else:
+            self.energy -= self.static_living_cost
+
+        # reproduce if having sufficient energy
+        if self.model.schedule.time % REPRODUCTION_STEPS == 0:
+            if self.energy >= 2 * REPRODUCTION_ENERGY and np.random.uniform() < REPRODUCE_PROB:
+                self.reproduce()
 
         if self.energy <= 0:
             self.die()
+            self.model.ages.append((self.unique_id, self.age))
