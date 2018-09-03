@@ -8,7 +8,7 @@ def agent_portrayal(agent):
                 "Shape": "circle",
                 "Filled": "true",
                 "Layer": 0.2,
-                "Color": "green",
+                "Color": "blue",
                 "r": 0.8,
                 }
     elif agent.type == "exploiter":
@@ -24,7 +24,7 @@ def agent_portrayal(agent):
                 "Shape": "rect",
                 "Filled": "true",
                 "Layer": 0,
-                "Color": "blue",
+                "Color": "green",
                 "w": 1,
                 "h": 1,
                 }
