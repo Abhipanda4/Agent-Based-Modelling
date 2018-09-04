@@ -9,7 +9,7 @@ from config import *
 from agent import *
 
 class World(Model):
-    def __init__(self, N, width=100, height=100):
+    def __init__(self, N, coop, width=100, height=100):
         self.num_agents = N
         self.grid = MultiGrid(width, height, False)
         self.schedule = RandomActivation(self)
@@ -27,11 +27,11 @@ class World(Model):
         for i in range(1, self.num_agents + 1):
             if np.random.uniform() <= EXPLORER_RATIO:
                 # create a new explorer
-                a = Explorer("explorer_%d" %(i), self)
+                a = Explorer("explorer_%d" %(i), self, coop)
                 self.num_explorers += 1
             else:
                 # create a new exploiter
-                a = Exploiter("exploiter_%d" %(i), self)
+                a = Exploiter("exploiter_%d" %(i), self, coop)
                 self.num_exploiters += 1
 
             # keep society members confined at beginning
@@ -61,7 +61,9 @@ class World(Model):
     def step(self):
         self.schedule.step()
         if self.schedule.steps % NEW_ENERGY_STEPS == 0:
-            if np.random.uniform() < NEW_ENERGY_PROB:
+            num_dead = len(self.ages)
+            remaining = self.num_agents - num_dead
+            if np.random.uniform() < NEW_ENERGY_PROB and remaining > 10:
                 self.num_energy_resources += 1
                 a = EnergyResource("energy_reserve_%d" %(self.num_energy_resources), self)
 
@@ -71,6 +73,3 @@ class World(Model):
                 self.grid.place_agent(a, (x, y))
 
                 self.schedule.add(a)
-
-        # log info about the world
-        print(self.num_explorers, self.num_exploiters)

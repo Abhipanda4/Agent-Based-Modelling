@@ -49,12 +49,13 @@ class EnergyResource(Agent):
             self.model.grid.remove_agent(self)
 
 class SocietyMember(Agent):
-    def __init__(self, unique_id, model):
+    def __init__(self, unique_id, model, coop):
         super().__init__(unique_id, model)
         self.memory = []
         self.energy = np.random.normal(MEAN_ENERGY, STDDEV_ENERGY, size=1)[0]
         self.age = 0
         self.target = None
+        self.share_probability = coop
 
     def update_target(self):
         def criteria(x):
@@ -103,7 +104,7 @@ class SocietyMember(Agent):
 
     def share_memory(self, agent):
         for m in self.memory:
-            if np.random.uniform() < SHARE_PROB:
+            if np.random.uniform() < self.share_probability:
                 idx = is_member(m[0], agent.memory)
                 if idx is None:
                     agent.memory.append(m)
@@ -130,18 +131,18 @@ class SocietyMember(Agent):
         if "explorer" in self.unique_id:
             if np.random.uniform() < INHERITANCE_PROB:
                 self.model.num_explorers += 1
-                a = Explorer("explorer_%d" %(self.model.num_agents), self.model)
+                a = Explorer("explorer_%d" %(self.model.num_agents), self.model, self.share_probability)
             else:
                 self.model.num_exploiters += 1
-                a = Exploiter("exploiter_%d" %(self.model.num_agents), self.model)
+                a = Exploiter("exploiter_%d" %(self.model.num_agents), self.model, self.share_probability)
 
         elif "exploiter" in self.unique_id:
             if np.random.uniform() < INHERITANCE_PROB:
                 self.model.num_exploiters += 1
-                a = Exploiter("exploiter_%d" %(self.model.num_agents), self.model)
+                a = Exploiter("exploiter_%d" %(self.model.num_agents), self.model, self.share_probability)
             else:
                 self.model.num_explorers += 1
-                a = Explorer("explorer_%d" %(self.model.num_agents), self.model)
+                a = Explorer("explorer_%d" %(self.model.num_agents), self.model, self.share_probability)
 
         else:
             raise Exception("Alien has been found!!")
@@ -159,8 +160,8 @@ class SocietyMember(Agent):
         raise NotImplementedError
 
 class Explorer(SocietyMember):
-    def __init__(self, unique_id, model):
-        super().__init__(unique_id, model)
+    def __init__(self, unique_id, model, coop):
+        super().__init__(unique_id, model, coop)
         self.type = "explorer"
         self.living_cost = max(0.25, np.random.normal(EXPLORER_COST_MEAN, EXPLORER_COST_STD))
         self.communication_range = EXPLORER_COMM_RANGE
@@ -259,8 +260,8 @@ class Explorer(SocietyMember):
             self.die()
 
 class Exploiter(SocietyMember):
-    def __init__(self, unique_id, model):
-        super().__init__(unique_id, model)
+    def __init__(self, unique_id, model, coop):
+        super().__init__(unique_id, model, coop)
         self.type = "exploiter"
         self.living_cost = max(0.5, np.random.normal(EXPLOITER_COST_MEAN, EXPLOITER_COST_STD))
         self.static_living_cost = max(0.2, self.living_cost / 4)

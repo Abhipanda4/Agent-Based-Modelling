@@ -30,4 +30,4 @@ def agent_portrayal(agent):
                 }
 
 grid = CanvasGrid(agent_portrayal, 100, 100, 800, 800)
-server = ModularServer(World, [grid], "Demo", {"N": 100})
+server = ModularServer(World, [grid], "Demo", {"N": 100, "coop": 0.5})
