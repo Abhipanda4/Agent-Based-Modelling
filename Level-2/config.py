@@ -58,8 +58,8 @@ REPRODUCE_PROB = 0.05
 INHERITANCE_PROB = 0.75
 
 # spawn new energy resources
-NEW_ENERGY_PROB = 0.2
-NEW_ENERGY_STEPS = 75
+NEW_ENERGY_PROB = 0.4
+NEW_ENERGY_STEPS = 50
 
 # timesteps after which explorer returns to base
 BASE_RETURN_INTERVAL = 200
