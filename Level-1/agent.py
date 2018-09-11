@@ -61,8 +61,9 @@ class SocietyMember(Agent):
         def criteria(x):
             # define a selection criteria for target
             # it is based on amount of energy expected at the destination
-            dest, reserve_size, decay = x[0], x[1], x[2]
+            dest, reserve_size, decay, obs_time = x[0], x[1], x[2], x[3]
             d = max(dest[0] - self.pos[0], dest[1] - self.pos[1])
+            reserve_size = reserve_size - (self.model.schedule.time - obs_time) * decay
             expected_energy = reserve_size - d * decay
             return expected_energy
 
@@ -79,7 +80,7 @@ class SocietyMember(Agent):
         for e in nbrs:
             idx = is_member(e.pos, self.memory)
             if isinstance(e, EnergyResource) and idx is None:
-                self.memory.append((e.pos, e.reserve, e.decay_rate))
+                self.memory.append((e.pos, e.reserve, e.decay_rate, self.model.schedule.time))
 
     def mine_energy(self):
         cell_occupiers = self.model.grid.get_cell_list_contents(self.pos)
