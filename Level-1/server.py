@@ -1,5 +1,6 @@
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
+from mesa.visualization.modules import ChartModule
 from model import World
 
 def agent_portrayal(agent):
@@ -30,4 +31,6 @@ def agent_portrayal(agent):
                 }
 
 grid = CanvasGrid(agent_portrayal, 100, 100, 800, 800)
-server = ModularServer(World, [grid], "Demo", {"N": 100, "coop": 0.5})
+chart = ChartModule([{"Label": "Num_Explorer","Color" : "Black"}, {"Label": "Num_Exploiter","Color": "Red"}],data_collector_name = 'datacollector')
+server = ModularServer(World, [grid, chart], "Demo", {"N": 100, "coop": 0.5})
+# server = ModularServer(World, [grid], "Demo", {"N": 100, "coop": 0.5})

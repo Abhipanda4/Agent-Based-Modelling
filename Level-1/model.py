@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from mesa import Model
 from mesa.space import MultiGrid
 from mesa.time import RandomActivation
+from mesa.datacollection import DataCollector
 
 from config import *
 from agent import *
@@ -21,7 +22,9 @@ class World(Model):
         self.expected_ages = []
         self.num_explorers = 0
         self.num_exploiters = 0
+        self.datacollector = DataCollector(model_reporters={"Num_Explorer": "num_explorers","Num_Exploiter": "num_exploiters"} )
         self.bases = self.init_base()
+
 
         # add social agents to the world
         for i in range(1, self.num_agents + 1):
@@ -59,6 +62,7 @@ class World(Model):
         return self.grid.get_neighborhood(pos, True, radius=POP_SPREAD)
 
     def step(self):
+        self.datacollector.collect(self)
         self.schedule.step()
         if self.schedule.steps % NEW_ENERGY_STEPS == 0:
             num_dead = len(self.ages)
