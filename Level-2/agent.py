@@ -37,7 +37,7 @@ class EnergyResource(Agent):
     def step(self):
         self.reserve -= self.decay_rate
         if np.random.uniform() < 0.05:
-            self.decay_rate += np.random.normal(0, STDDEV_RESERVE)
+            self.decay_rate += np.random.normal(0, 0.1 * STDDEV_RESERVE)
             self.decay_rate *= -1
 
         if self.reserve <= 0:
@@ -224,11 +224,13 @@ class Explorer(SocietyMember):
 
     def borrow_energy(self):
         nbrs = self.model.grid.get_neighborhood(self.pos, moore=True, radius=ENERGY_TRANSMIT_RADIUS)
+        if len(nbrs) == 0:
+            return False
         for a in nbrs:
             if isinstance(a, Exploiter) and np.random.uniform < a.energy_share_prob:
                 self.energy += self.mining_rate
                 a.energy -= self.mining_rate
-                return
+                return True
 
 
     def step(self):
@@ -249,7 +251,9 @@ class Explorer(SocietyMember):
             if self.is_returning_to_base is True:
                 if self.energy <= MINING_FACTOR * THRESHOLD_EXPLORER:
                     # since it is returning to base, borrow energy from exploiters
-                    self.borrow_energy()
+                    success = self.borrow_energy()
+                    if not success:
+                        self.is_returning_to_base = False
                 else:
                     self.is_returning_to_base = False
                     self.drift = random.choice(DIRECTIONS)
