@@ -1,6 +1,6 @@
 from mesa.visualization.modules import CanvasGrid
-from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.modules import ChartModule
+from mesa.visualization.ModularVisualization import ModularServer
 from model import World
 
 def agent_portrayal(agent):
