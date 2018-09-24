@@ -30,7 +30,7 @@ def is_member(coord, list_of_tuples):
 class EnergyResource(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.reserve = max(0, np.random.normal(MEAN_RESERVE, STDDEV_RESERVE))
+        self.reserve = max(MEAN_RESERVE/2, np.random.normal(MEAN_RESERVE, STDDEV_RESERVE))
         self.decay_rate = np.random.uniform(-DECAY_RATE, DECAY_RATE)
         self.type = "energy_reserve"
 
@@ -65,6 +65,8 @@ class SocietyMember(Agent):
             d = max(dest[0] - self.pos[0], dest[1] - self.pos[1])
             reserve_size = reserve_size - (self.model.schedule.time - obs_time) * decay
             expected_energy = reserve_size - d * decay
+            if expected_energy < 0:
+                return 0
             return expected_energy
 
         if self.target is None:
@@ -81,7 +83,7 @@ class SocietyMember(Agent):
                 else:
                     expected_gain = [criteria(i) for i in self.memory]
                     total_sum = sum(expected_gain)
-                    selection_p = [i/total_sum for i in expected_gain]
+                    selection_p = [(i + 1)/(total_sum + len(expected_gain)) for i in expected_gain]
 
                     idx_list = list(range(len(self.memory)))
                     self.target = self.memory[np.random.choice(idx_list, p=selection_p)][0]
