@@ -10,6 +10,7 @@ mean_exploiter_age = []
 mean_age = []
 mean_expected_age = []
 age_dist = []
+energy_dist = []
 n_exploiters = []
 n_explorers = []
 
@@ -25,6 +26,10 @@ for log in log_files:
             if row[0] == "ages":
                 if flag:
                     age_dist.append([int(i) for i in row[1:]])
+
+            elif row[0] == "total_energy":
+                if flag:
+                    energy_dist.append([float(i) for i in row[1:]])
 
             elif row[0] == "num_explorers":
                 if flag:
@@ -46,8 +51,10 @@ for log in log_files:
         mean_age.append(np.mean(population_age))
         mean_expected_age.append(np.mean(expected_age))
 
+# plot of mean age of explorer, exploiter and whole population
 plt.figure(1)
 x = [i * 10 for i in range(11)]
+x = [50]
 plt.plot(x, mean_explorer_age, label="Mean Explorer Age")
 plt.plot(x, mean_exploiter_age, label="Mean Exploiter Age")
 plt.plot(x, mean_age, label="Mean Population Age")
@@ -56,6 +63,7 @@ plt.ylabel("Number of timesteps the agents survived")
 plt.legend()
 plt.show()
 
+# variation of balance between population of exploiters and explorers
 N = len(n_exploiters)
 for i in range(N):
     x_axis = list(range(len(n_explorers[i])))
@@ -67,9 +75,19 @@ for i in range(N):
     plt.legend()
     plt.show()
 
+# plot of age distribution in the population
 for idx, i in enumerate(age_dist):
     plt.plot(list(range(len(i))), sorted(i), label="Memory sharing = " + str(x[idx]))
 plt.xlabel("Agents in the world")
 plt.ylabel("Number of timesteps the agents survived")
+plt.legend()
+plt.show()
+
+# plot of energy variations in world with time
+for idx, i in enumerate(energy_dist):
+    plt.plot(list(range(len(i))), i, label="Memory sharing = " + str(x[idx]))
+plt.xlabel("Timesteps")
+plt.ylabel("Total energy available in world")
+plt.title("Variation of total energy in the world with time")
 plt.legend()
 plt.show()

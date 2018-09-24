@@ -25,6 +25,7 @@ class World(Model):
         self.ages = []
         self.expected_ages = []
         self.member_tracker = []
+        self.energy_tracker = []
 
         # add social agents to the world
         for i in range(1, self.num_agents + 1):
@@ -65,17 +66,7 @@ class World(Model):
         self.datacollector.collect(self)
         self.schedule.step()
         self.member_tracker.append((self.num_explorers, self.num_exploiters))
-        if self.schedule.steps % NEW_ENERGY_STEPS == 0:
-            num_dead = len(self.ages)
-            remaining = self.num_agents - num_dead
-            # spawn new energy resource
-            if np.random.uniform() < NEW_ENERGY_PROB and remaining > 10:
-                self.num_energy_resources += 1
-                a = EnergyResource("energy_reserve_%d" %(self.num_energy_resources), self)
 
-                # decide location of energy reserve
-                x = np.random.randint(0, self.grid.width)
-                y = np.random.randint(0, self.grid.height)
-                self.grid.place_agent(a, (x, y))
-
-                self.schedule.add(a)
+        # keep track of total energy in world
+        energies = [e.reserve for e in self.schedule.agents if isinstance(e, EnergyResource)]
+        self.energy_tracker.append(sum(energies))
