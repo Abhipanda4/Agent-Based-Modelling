@@ -5,7 +5,7 @@ POP_MARGIN = 20
 POP_SPREAD = 20
 
 # mean and std of energy of new born agents
-MEAN_ENERGY = 150
+MEAN_ENERGY = 100
 STDDEV_ENERGY = 10
 
 # number of energy resources
@@ -65,3 +65,5 @@ ENERGY_TRANSMIT_RADIUS = 8
 
 # for epsilon-greedy strategy
 EPSILON = 0.5
+
+DECAY_RATE_ADJUST = 0.5

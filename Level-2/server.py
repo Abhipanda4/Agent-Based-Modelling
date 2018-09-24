@@ -31,10 +31,10 @@ def agent_portrayal(agent):
                 }
 
 grid = CanvasGrid(agent_portrayal, 100, 100, 800, 800)
-chart = ChartModule(
+agent_plot = ChartModule(
         [
             {"Label": "Num_Explorer","Color" : "Black"},
             {"Label": "Num_Exploiter","Color": "Red"}
         ],
         data_collector_name = 'datacollector')
-server = ModularServer(World, [grid, chart], "Demo", {"N": 100, "coop": 0.5, "e_prob": 0.5})
+server = ModularServer(World, [grid, agent_plot], "Demo", {"N": 100, "coop": 0.5, "e_prob": 0.5})

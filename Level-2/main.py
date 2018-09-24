@@ -5,7 +5,7 @@ from server import server
 from model import *
 
 # constants specific to statistic collection of simulations
-NUM_SIMULATIONS = 1
+NUM_SIMULATIONS = 10
 
 parser = argparse.ArgumentParser(description="Visualization controls")
 parser.add_argument("--visualize",  action="store_true", help="whether to visualize on browser")
@@ -18,7 +18,7 @@ else:
     coops = np.arange(0.0, 1.1, 0.1)
 
     ## TESTING ##
-    coops = [0.5]
+    # coops = [0.5]
     #############
 
     e_prob = 0.5
@@ -28,7 +28,7 @@ else:
         with open(f_name, 'w+') as f:
             for _ in range(NUM_SIMULATIONS):
                 model = World(100, coop, e_prob)
-                while len(model.schedule.agents) != 0:
+                while model.schedule.time < 5000 and len(model.schedule.agents) != 0:
                     # simulate till there are agents in the world
                     model.step()
 
