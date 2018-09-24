@@ -57,12 +57,11 @@ REPRODUCTION_ENERGY = 30
 REPRODUCE_PROB = 0.05
 INHERITANCE_PROB = 0.75
 
-# spawn new energy resources
-NEW_ENERGY_PROB = 0.4
-NEW_ENERGY_STEPS = 50
-
 # timesteps after which explorer returns to base
 BASE_RETURN_INTERVAL = 200
 BASE_RETURN_DEV = 50
 
 ENERGY_TRANSMIT_RADIUS = 8
+
+# for epsilon-greedy strategy
+EPSILON = 0.5
