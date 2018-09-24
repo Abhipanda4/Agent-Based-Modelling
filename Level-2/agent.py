@@ -36,10 +36,6 @@ class EnergyResource(Agent):
 
     def step(self):
         self.reserve -= self.decay_rate
-        if np.random.uniform() < 0.05:
-            self.decay_rate += np.random.normal(0, 0.1 * STDDEV_RESERVE)
-            self.decay_rate *= -1
-
         if self.reserve <= 0:
             # remove this energy reserve from all agent's memories
             for a in self.model.schedule.agents:
@@ -79,7 +75,16 @@ class SocietyMember(Agent):
                 pass
 
             if len(self.memory) > 0:
-                self.target = max(self.memory, key=criteria)[0]
+                # use epsilon-greedy policy for target selection
+                if np.random.uniform() > EPSILON:
+                    self.target = max(self.memory, key=criteria)[0]
+                else:
+                    expected_gain = [criteria(i) for i in self.memory]
+                    total_sum = sum(expected_gain)
+                    selection_p = [i/total_sum for i in expected_gain]
+
+                    idx_list = list(range(len(self.memory)))
+                    self.target = self.memory[np.random.choice(idx_list, p=selection_p)][0]
 
     def update_memory(self, max_range):
         '''
@@ -91,8 +96,10 @@ class SocietyMember(Agent):
             idx = is_member(e.pos, self.memory)
             if isinstance(e, EnergyResource):
                 if idx is None:
+                    # add new energy resource
                     self.memory.append((e.pos, e.reserve, e.decay_rate, self.model.schedule.time))
                 else:
+                    # the decay rate needs to be updated in memory
                     self.memory[idx] = (e.pos, e.reserve, e.decay_rate, self.model.schedule.time)
 
     def mine_energy(self):
@@ -224,13 +231,13 @@ class Explorer(SocietyMember):
 
     def borrow_energy(self):
         nbrs = self.model.grid.get_neighborhood(self.pos, moore=True, radius=ENERGY_TRANSMIT_RADIUS)
-        if len(nbrs) == 0:
-            return False
         for a in nbrs:
             if isinstance(a, Exploiter) and np.random.uniform < a.energy_share_prob:
-                self.energy += self.mining_rate
-                a.energy -= self.mining_rate
-                return True
+                if a.energy > THRESHOLD_EXPLOITER:
+                    self.energy += self.mining_rate
+                    a.energy -= self.mining_rate
+                    return True
+        return False
 
 
     def step(self):
@@ -257,6 +264,7 @@ class Explorer(SocietyMember):
                 else:
                     self.is_returning_to_base = False
                     self.drift = random.choice(DIRECTIONS)
+
             elif self.mine_mode is True:
                 if self.energy <= MINING_FACTOR * THRESHOLD_EXPLORER:
                     # mine energy from this location if energy is low
