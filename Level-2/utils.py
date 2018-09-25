@@ -54,7 +54,6 @@ for log in log_files:
 # plot of mean age of explorer, exploiter and whole population
 plt.figure(1)
 x = [i * 10 for i in range(11)]
-x = [50]
 plt.plot(x, mean_explorer_age, label="Mean Explorer Age")
 plt.plot(x, mean_exploiter_age, label="Mean Exploiter Age")
 plt.plot(x, mean_age, label="Mean Population Age")
