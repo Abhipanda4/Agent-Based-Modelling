@@ -333,8 +333,7 @@ class Exploiter(SocietyMember):
         self.model.grid.remove_agent(self)
 
     def move(self):
-        if self.target is None:
-            self.update_target()
+        self.update_target()
 
         # target is not updated since no resources in memory
         if self.target is None:
@@ -343,7 +342,9 @@ class Exploiter(SocietyMember):
 
         if self.target == self.pos:
             if self.is_at_base:
+                self.is_at_base = False
                 self.is_exploiting = False
+                self.energy -= self.static_living_cost
 
             elif self.energy <= MINING_FACTOR * THRESHOLD_EXPLOITER:
                 success = self.mine_energy()
@@ -351,11 +352,14 @@ class Exploiter(SocietyMember):
                     # source has depleted before full energy was replenished
                     self.update_target()
                     if self.target is None:
+                        # if no other target is found, go back to base
                         self.target = random.choice(self.model.bases)
                         self.is_at_base = True
+                    self.energy -= self.static_living_cost
 
             else:
-                # remove current pos from memory and get a new target
+                # sufficient energy has been restored
+                # remove current pos from memory and return to base
                 tmp = None
                 idx = is_member(self.pos, self.memory)
                 if idx:
@@ -368,15 +372,14 @@ class Exploiter(SocietyMember):
                 # add current pos back in memory to mine at later times
                 if idx:
                     self.memory.append(tmp)
+                self.energy -= self.static_living_cost
 
         else:
-            new_position = None
-            if self.target is not None:
-                new_position = get_target_cell(self.target, self.pos)
+            # move towards target
+            new_position = get_target_cell(self.target, self.pos)
+            self.model.grid.move_agent(self, new_position)
+            self.energy -= self.living_cost
 
-            if new_position is not None:
-                self.model.grid.move_agent(self, new_position)
-                self.energy -= self.living_cost
 
     def step(self):
         self.age += 1
