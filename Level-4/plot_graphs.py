@@ -3,7 +3,23 @@ import numpy as np
 import csv
 import os
 
+from config import *
+
 log_files = ["logs/" + f for f in os.listdir("./logs")]
+
+comm_level = "low-high"
+
+print("This program is going to generate "\
+        "plots for data collected with following energy parameters:")
+print()
+print("\tCooperation between agents of same type: %f" %(INTRA_COMMUNICATION_PROB))
+print("\tCooperation between agents of different type: %f" %(INTER_COMMUNICATION_PROB))
+print()
+print("Level of communication specified is: %s" %(comm_level))
+print()
+user_response = input("Are you sure you want to continue?[y/n] ")
+if user_response == "n" or user_response == "":
+    sys.exit(0)
 
 mean_explorer_age = []
 mean_exploiter_age = []
@@ -60,6 +76,7 @@ plt.plot(x, mean_age, label="Mean Population Age")
 plt.xlabel("Levels of Memory Sharing")
 plt.ylabel("Number of timesteps the agents survived")
 plt.legend()
+plt.savefig("images/" + comm_level + "/mean_ages.png")
 plt.show()
 
 # variation of balance between population of exploiters and explorers
@@ -72,6 +89,7 @@ for i in range(N):
     plt.ylabel("Number of agents")
     plt.title("Explorers and Expoiters when memory sharing = %s" %(str(i/10)))
     plt.legend()
+    plt.savefig("images/" + comm_level + "/num_agents_at_coop_%s.png" %(str(i * 10)))
     plt.show()
 
 # plot of age distribution in the population
@@ -80,6 +98,7 @@ for idx, i in enumerate(age_dist):
 plt.xlabel("Agents in the world")
 plt.ylabel("Number of timesteps the agents survived")
 plt.legend()
+plt.savefig("images/" + comm_level + "/age_distribution.png")
 plt.show()
 
 # plot of energy variations in world with time
@@ -89,4 +108,5 @@ plt.xlabel("Timesteps")
 plt.ylabel("Total energy available in world")
 plt.title("Variation of total energy in the world with time")
 plt.legend()
+plt.savefig("images/" + comm_level + "/energy_variation.png")
 plt.show()
