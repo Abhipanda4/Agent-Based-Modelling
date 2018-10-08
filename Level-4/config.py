@@ -33,7 +33,8 @@ EXPLOITER_COMM_RANGE = 5
 # no of steps at which communication and discovery occur
 SENSE_STEPS = 10
 COMMUNICATION_STEPS = 10
-COMMUNICATION_PROB = 0.3
+INTER_COMMUNICATION_PROB = 0.8
+INTRA_COMMUNICATION_PROB = 0.2
 
 # rate at which energy is extracted from energy resources
 EXPLORER_MINING_RATE = 0.5

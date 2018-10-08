@@ -137,8 +137,12 @@ class SocietyMember(Agent):
         nbrs = self.model.grid.get_neighbors(self.pos, moore=True, radius=max_range)
         for a in nbrs:
             if isinstance(a, SocietyMember):
-                if np.random.uniform() <= COMMUNICATION_PROB:
-                    self.share_memory(a)
+                if a.type == self.type:
+                    if np.random.uniform() <= INTRA_COMMUNICATION_PROB:
+                        self.share_memory(a)
+                else:
+                    if np.random.uniform() <= INTER_COMMUNICATION_PROB:
+                        self.share_memory(a)
 
     def reproduce(self):
         ''' An agent reproduces to produca a new agent. The new agent is of
