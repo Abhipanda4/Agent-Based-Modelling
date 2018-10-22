@@ -69,7 +69,10 @@ class World(Model):
 
         # keep track of total energy in world
         energies = [e.reserve for e in self.schedule.agents if isinstance(e, EnergyResource)]
-        mean_energy = np.mean(energies)
+        if len(energies) > 0:
+            mean_energy = np.mean(energies)
+        else:
+            mean_energy = 0
         self.energy_tracker.append(mean_energy)
 
         # adjust decay rates to keep mean energy balanced in the world

@@ -5,7 +5,7 @@ from server import server
 from model import *
 
 # constants specific to statistic collection of simulations
-NUM_SIMULATIONS = 10
+NUM_SIMULATIONS = 5
 
 parser = argparse.ArgumentParser(description="Visualization controls")
 parser.add_argument("--visualize",  action="store_true", help="whether to visualize on browser")
