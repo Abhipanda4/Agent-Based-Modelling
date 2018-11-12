@@ -23,6 +23,7 @@ class World(Model):
         self.datacollector = DataCollector(model_reporters={"Num_Explorer": "num_explorers","Num_Exploiter": "num_exploiters"})
         self.bases = self.init_base()
         self.ages = []
+        self.memoryLens = [] # This will store average memory length at death for agent
         self.expected_ages = []
         self.member_tracker = []
         self.energy_tracker = []

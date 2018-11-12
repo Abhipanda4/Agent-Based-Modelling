@@ -27,6 +27,23 @@ def is_member(coord, list_of_tuples):
     except ValueError:
         return None
 
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
 class EnergyResource(Agent):
     def __init__(self, unique_id, model, decay_rate):
         super().__init__(unique_id, model)
@@ -54,6 +71,7 @@ class SocietyMember(Agent):
         self.memory = []
         self.energy = np.random.normal(MEAN_ENERGY, STDDEV_ENERGY, size=1)[0]
         self.age = 0
+        self.memLen = AverageMeter()
         self.target = None
         self.share_probability = coop
 
@@ -103,6 +121,9 @@ class SocietyMember(Agent):
                 else:
                     # the decay rate needs to be updated in memory
                     self.memory[idx] = (e.pos, e.reserve, e.decay_rate, self.model.schedule.time)
+        
+        # Update the current length of memory
+        self.memLen.update(len(self.memory))
 
     def mine_energy(self):
         cell_occupiers = self.model.grid.get_cell_list_contents(self.pos)
@@ -314,7 +335,9 @@ class Explorer(SocietyMember):
 
         self.age += 1
         if self.energy <= 0:
+            # On death, append the agent age, and the average memory length to model
             self.model.ages.append((self.unique_id, self.age))
+            self.model.memoryLens.append((self.unique_id, self.memLen.avg))
             self.die()
 
 class Exploiter(SocietyMember):
