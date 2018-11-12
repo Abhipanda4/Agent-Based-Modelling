@@ -2,7 +2,7 @@ import numpy as np
 import argparse
 
 from server import server
-from model import *
+from model import World
 
 def main():
     # constants specific to statistic collection of simulations

@@ -64,9 +64,7 @@ class World(Model):
         return self.grid.get_neighborhood(pos, True, radius=POP_SPREAD)
 
     def init_decay_rates(self):
-        decay_rates = list(np.random.uniform(-DECAY_RATE, DECAY_RATE, self.num_energy_resources - 1))
-        decay_rates.extend([-1 * np.sum(decay_rates)])
-        decay_rates += np.random.uniform(-0.1, 0, self.num_energy_resources)
+        decay_rates = list(np.random.uniform(-0.1, 0.02, self.num_energy_resources))
         np.random.shuffle(decay_rates)
         return decay_rates
 
@@ -76,12 +74,13 @@ class World(Model):
         self.member_tracker.append((self.num_explorers, self.num_exploiters))
 
         # keep track of total energy in world
-        energies = [e.reserve for e in self.schedule.agents if isinstance(e, EnergyResource)]
-        if len(energies) > 0:
-            mean_energy = np.mean(energies)
-        else:
-            mean_energy = 0
-        self.energy_tracker.append(mean_energy)
+        if self.schedule.time % 50 == 0:
+            energies = [e.reserve for e in self.schedule.agents if isinstance(e, EnergyResource)]
+            if len(energies) > 0:
+                mean_energy = np.mean(energies)
+            else:
+                mean_energy = 0
+            self.energy_tracker.append(mean_energy)
 
         # change location of energy resources every 500 steps randomly
         # and change decay_rate to opposite every 100 steps

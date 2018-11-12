@@ -7,7 +7,7 @@ from config import *
 
 log_files = ["logs/" + f for f in os.listdir("./logs")]
 
-comm_level = 'low-low'
+comm_level = 'high-high'
 img_store_dir = "images/" + comm_level
 if not os.path.exists(img_store_dir):
     os.mkdir(img_store_dir)
