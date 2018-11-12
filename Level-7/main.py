@@ -42,11 +42,13 @@ def main():
                     # mean expected age based on initial values
                     expected_age = np.mean(model.expected_ages)
                     ages = ', '.join([str(i[1]) for i in model.ages])
+                    memoryLens = ', '.join([str(i[1]) for i in model.memoryLens])
                     total_energy = ', '.join([str(i) for i in model.energy_tracker])
                     num_explorers = ', '.join([str(i[0]) for i in model.member_tracker])
                     num_exploiters = ', '.join([str(i[1]) for i in model.member_tracker])
 
                     f.write("ages, " + ages + "\n")
+                    f.write("memoryLens, " + memoryLens + "\n")
                     f.write("total_energy, " + total_energy + "\n")
                     f.write("num_explorers, " + num_explorers + "\n")
                     f.write("num_exploiters, " + num_exploiters + "\n")
