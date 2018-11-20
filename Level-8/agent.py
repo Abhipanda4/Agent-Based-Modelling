@@ -438,6 +438,7 @@ class Exploiter(SocietyMember):
             if self.energy >= 2 * REPRODUCTION_ENERGY and np.random.uniform() < REPRODUCE_PROB:
                 self.reproduce()
 
+        self.model.ages[self.unique_id] = self.age
+        self.model.memoryLens[self.unique_id] = self.memLen.avg
         if self.energy <= 0:
             self.die()
-            self.model.ages[self.unique_id] = self.age
