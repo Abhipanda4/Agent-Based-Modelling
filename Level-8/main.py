@@ -24,8 +24,8 @@ def main():
 
         e_prob = 0.5
         for coop in coops:
-            print("Simulating with cooperation level %.2f" %(coop))
-            print("Calling Thread")
+            # print("Simulating with cooperation level %.2f" %(coop))
+            # print("Calling Thread")
             th = Thread(target = callThread, args = (coop, e_prob))
             th.start()
 
@@ -38,7 +38,7 @@ def callThread(coop, e_prob):
             model = World(100, coop, e_prob)
             while model.schedule.time < 3000 and len(model.schedule.agents) != 0:
                 # simulate till there are agents in the world
-                print("Co-op: %f, Time %d" % (coop, model.schedule.time))
+                # print("Co-op: %f, Time %d" % (coop, model.schedule.time))
                 model.step()
 
             # explorer mean age

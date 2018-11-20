@@ -190,6 +190,8 @@ class SocietyMember(Agent):
         else:
             raise Exception("Alien has been found!!")
 
+        # copy memory
+        a.memory = self.memory
         # place the new agent in vicinity of the parent
         nbrs = self.model.grid.get_neighborhood(self.pos, moore=True, radius=3)
         pos = random.choice(nbrs)
