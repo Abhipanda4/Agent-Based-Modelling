@@ -34,15 +34,17 @@ def main():
                         model.step()
 
                     # explorer mean age
-                    mean_explorer_age = np.mean([i[1] for i in model.ages if "explorer" in i[0]])
+                    mean_explorer_age = np.mean([model.ages[i] for i in model.ages if "explorer" in i])
                     # exploiter mean age
-                    mean_exploiter_age = np.mean([i[1] for i in model.ages if "exploiter" in i[0]])
+                    mean_exploiter_age = np.mean([model.ages[i] for i in model.ages if "exploiter" in i])
                     # entire population mean age
-                    mean_age = np.mean([i[1] for i in model.ages])
+                    mean_age = np.mean([model.ages[i] for i in model.ages])
                     # mean expected age based on initial values
                     expected_age = np.mean(model.expected_ages)
-                    ages = ', '.join([str(i[1]) for i in model.ages])
-                    memoryLens = ', '.join([str(i[1]) for i in model.memoryLens])
+
+                    ages = ', '.join([str(model.ages[i]) for i in model.ages])
+                    memoryLens = ', '.join([str(model.memoryLens[i]) for i in model.memoryLens])
+
                     total_energy = ', '.join([str(i) for i in model.energy_tracker])
                     num_explorers = ', '.join([str(i[0]) for i in model.member_tracker])
                     num_exploiters = ', '.join([str(i[1]) for i in model.member_tracker])

@@ -334,10 +334,10 @@ class Explorer(SocietyMember):
                 self.reproduce()
 
         self.age += 1
+        self.model.ages[self.unique_id] =  self.age
+        self.model.memoryLens[self.unique_id] = self.memLen.avg
         if self.energy <= 0:
             # On death, append the agent age, and the average memory length to model
-            self.model.ages.append((self.unique_id, self.age))
-            self.model.memoryLens.append((self.unique_id, self.memLen.avg))
             self.die()
 
 class Exploiter(SocietyMember):
@@ -440,4 +440,4 @@ class Exploiter(SocietyMember):
 
         if self.energy <= 0:
             self.die()
-            self.model.ages.append((self.unique_id, self.age))
+            self.model.ages[self.unique_id] = self.age
